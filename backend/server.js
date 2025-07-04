@@ -8,6 +8,10 @@ const { sql, poolPromise } = require('./config/db'); // Ensure this path is corr
 
 // Import your employee routes
 const employeeRoutes = require('./routes/employees');
+const leaveRoutes = require('./routes/leaves')
+const payrollRoutes = require('./routes/payrolls')
+const appraisalRoutes = require('./routes/appraisals')
+const hrAdminRoutes = require('./routes/hrAdmin');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,10 +20,14 @@ const PORT = process.env.PORT || 5000;
 app.use(cors()); // Enable Cross-Origin Resource Sharing
 app.use(express.json()); // To parse JSON bodies from incoming requests
 
-// API Routes
-// This mounts the employeeRoutes router under the base path '/api/employees'.
-// E.g., router.get('/master') becomes GET http://localhost:5000/api/employees/master
+  // API Routes
+  // This mounts the employeeRoutes router under the base path '/api/employees'.
+  // E.g., router.get('/master') becomes GET http://localhost:5000/api/employees/master
 app.use('/api/employees', employeeRoutes);
+app.use('/api/leaves', leaveRoutes);
+app.use('/api/payrolls', payrollRoutes);
+app.use('/api/appraisals', appraisalRoutes);
+app.use('/api/hradmin', hrAdminRoutes);
 
 // A simple root route to confirm the server is running
 app.get('/', (req, res) => {
