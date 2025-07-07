@@ -12,6 +12,7 @@ const leaveRoutes = require('./routes/leaves')
 const payrollRoutes = require('./routes/payrolls')
 const appraisalRoutes = require('./routes/appraisals')
 const hrAdminRoutes = require('./routes/hrAdmin');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -28,7 +29,7 @@ app.use('/api/leaves', leaveRoutes);
 app.use('/api/payrolls', payrollRoutes);
 app.use('/api/appraisals', appraisalRoutes);
 app.use('/api/hradmin', hrAdminRoutes);
-
+app.use('/api/auth', authRoutes);
 // A simple root route to confirm the server is running
 app.get('/', (req, res) => {
   res.send('HRMS API is running...');
