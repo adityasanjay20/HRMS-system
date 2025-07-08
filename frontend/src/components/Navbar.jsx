@@ -3,6 +3,13 @@
 import React from 'react';
 
 function Navbar({ user, onLogout, setCurrentPage }) {
+    // --- NEW DEBUG LOGS ---
+  console.log('Navbar: User prop received:', user);
+  if (user) {
+    console.log('Navbar: user.roleName is:', user.roleName);
+    console.log('Navbar: Condition check (Admin || HR Manager):', user.roleName === 'Admin' || user.roleName === 'HR Manager');
+  }
+  // --- END NEW DEBUG LOGS ---
   return (
     <nav className="bg-blue-800 p-4 shadow-lg">
       <div className="container mx-auto flex justify-between items-center">
@@ -63,7 +70,6 @@ function Navbar({ user, onLogout, setCurrentPage }) {
             </button>
           )}
         </div>
-
         {/* User Info and Logout */}
         <div className="flex items-center space-x-4">
           <span className="text-gray-200 text-lg">

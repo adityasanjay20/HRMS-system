@@ -1,3 +1,5 @@
+// backend/controllers/hrAdminController.js
+
 const { sql, poolPromise } = require('../config/db'); // Adjust path if db.js is in 'db' directly
 
 // Controller for Asset Inventory
@@ -99,7 +101,7 @@ exports.getEmployeeOnboardingStatus = async (req, res) => {
 // Controller for Employee Journey
 exports.getEmployeeJourney = async (req, res) => {
   try {
-    const pool = await await poolPromise; // Corrected typo: remove one 'await'
+    const pool = await poolPromise; // Corrected: single await
     const result = await pool.request().query('SELECT * FROM dbo.vw_EmployeeJourney');
     res.json(result.recordset);
   } catch (err) {
@@ -110,10 +112,34 @@ exports.getEmployeeJourney = async (req, res) => {
 
 // --- Stored Procedure Controllers ---
 
+// Controller to get all departments
+exports.getAllDepartments = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT * FROM dbo.Departments'); // or the actual view/table
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching departments:', err.message);
+    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
+// Controller to get all roles
+exports.getAllRoles = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT * FROM dbo.Roles'); // or the actual view/table
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching roles:', err.message);
+    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
+
 // Controller to add a new asset
 exports.addAsset = async (req, res) => {
   try {
-    // Parameters: @CategoryName, @AssetName, @SerialNumber, @PurchaseDate
     const { CategoryName, AssetName, SerialNumber, PurchaseDate } = req.body;
 
     if (!CategoryName || !AssetName || !SerialNumber || !PurchaseDate) {
@@ -138,7 +164,6 @@ exports.addAsset = async (req, res) => {
 // Controller to assign an asset to an employee
 exports.assignAssetToEmployee = async (req, res) => {
   try {
-    // Parameters: @AssetID, @EmployeeID, @AssignedDate
     const { AssetID, EmployeeID, AssignedDate } = req.body;
 
     if (!AssetID || !EmployeeID || !AssignedDate) {
@@ -162,7 +187,6 @@ exports.assignAssetToEmployee = async (req, res) => {
 // Controller to return an asset
 exports.returnAsset = async (req, res) => {
   try {
-    // Parameters: @AssetID, @ReturnDate
     const { AssetID, ReturnDate } = req.body;
 
     if (!AssetID || !ReturnDate) {
@@ -185,7 +209,6 @@ exports.returnAsset = async (req, res) => {
 // Controller to initiate onboarding process
 exports.initiateOnboardingProcess = async (req, res) => {
   try {
-    // Parameters: @EmployeeID
     const { EmployeeID } = req.body;
 
     if (!EmployeeID) {
@@ -207,7 +230,6 @@ exports.initiateOnboardingProcess = async (req, res) => {
 // Controller to complete an onboarding step
 exports.completeOnboardingStep = async (req, res) => {
   try {
-    // Parameters: @EmployeeID, @StepName, @Notes
     const { EmployeeID, StepName, Notes } = req.body;
 
     if (!EmployeeID || !StepName) {
@@ -218,7 +240,7 @@ exports.completeOnboardingStep = async (req, res) => {
     await pool.request()
       .input('EmployeeID', sql.Int, EmployeeID)
       .input('StepName', sql.VarChar(255), StepName)
-      .input('Notes', sql.NVarChar(500), Notes) // Notes is nullable, send NULL if not provided or empty string
+      .input('Notes', sql.NVarChar(500), Notes)
       .execute('CompleteOnboardingStep');
 
     res.status(200).json({ message: 'Onboarding step completed successfully.' });
@@ -231,7 +253,6 @@ exports.completeOnboardingStep = async (req, res) => {
 // Controller to create a new project
 exports.createProject = async (req, res) => {
   try {
-    // Parameters: @ProjectName, @ClientID, @StartDate
     const { ProjectName, ClientID, StartDate } = req.body;
 
     if (!ProjectName || !StartDate) {
@@ -241,7 +262,7 @@ exports.createProject = async (req, res) => {
     const pool = await poolPromise;
     await pool.request()
       .input('ProjectName', sql.VarChar(150), ProjectName)
-      .input('ClientID', sql.Int, ClientID || null) // ClientID is nullable, send null if not provided
+      .input('ClientID', sql.Int, ClientID || null)
       .input('StartDate', sql.Date, StartDate)
       .execute('CreateProject');
 
@@ -251,3 +272,22 @@ exports.createProject = async (req, res) => {
     res.status(500).send({ message: 'Error creating project', error: err.message });
   }
 };
+
+// --- NEW DEBUG LOGS ---
+console.log('hrAdminController.js: Module loaded.');
+console.log('hrAdminController.js: exports.getAssetInventory is:', exports.getAssetInventory);
+console.log('hrAdminController.js: exports.getAssignedAssets is:', exports.getAssignedAssets);
+console.log('hrAdminController.js: exports.getDepartmentEmployeeCount is:', exports.getDepartmentEmployeeCount);
+console.log('hrAdminController.js: exports.getRoleOccupancyHistory is:', exports.getRoleOccupancyHistory);
+console.log('hrAdminController.js: exports.getProjectOverview is:', exports.getProjectOverview);
+console.log('hrAdminController.js: exports.getProjectTeams is:', exports.getProjectTeams);
+console.log('hrAdminController.js: exports.getCandidateStatusSummary is:', exports.getCandidateStatusSummary);
+console.log('hrAdminController.js: exports.getEmployeeOnboardingStatus is:', exports.getEmployeeOnboardingStatus);
+console.log('hrAdminController.js: exports.getEmployeeJourney is:', exports.getEmployeeJourney);
+console.log('hrAdminController.js: exports.addAsset is:', exports.addAsset);
+console.log('hrAdminController.js: exports.assignAssetToEmployee is:', exports.assignAssetToEmployee);
+console.log('hrAdminController.js: exports.returnAsset is:', exports.returnAsset);
+console.log('hrAdminController.js: exports.initiateOnboardingProcess is:', exports.initiateOnboardingProcess);
+console.log('hrAdminController.js: exports.completeOnboardingStep is:', exports.completeOnboardingStep);
+console.log('hrAdminController.js: exports.createProject is:', exports.createProject);
+// --- END NEW DEBUG LOGS ---

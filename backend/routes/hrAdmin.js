@@ -2,8 +2,10 @@
 
 const express = require('express');
 const router = express.Router();
-const hrAdminController = require('../controllers/hrAdminController'); // Import your controller
+const hrAdminController = require('../controllers/hrAdminController'); 
 
+router.get('/departments', hrAdminController.getAllDepartments);
+router.get('/roles', hrAdminController.getAllRoles);
 router.get('/assets/inventory', hrAdminController.getAssetInventory);
 router.get('/assets/assigned', hrAdminController.getAssignedAssets);
 router.get('/department/count', hrAdminController.getDepartmentEmployeeCount);

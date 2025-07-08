@@ -10,5 +10,7 @@ router.post('/', controller.addEmployee);
 router.put('/role', controller.changeEmployeeRole); 
 router.put('/salary', controller.updateSalary);
 router.put('/:id/terminate', controller.removeEmployee);
+router.get('/:id', controller.getEmployeeById); 
+router.put('/:id/updateDetails', controller.updateEmployeeDetails); 
 
 module.exports = router;

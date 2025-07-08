@@ -17,26 +17,25 @@ if (!jwtSecret) {
 
 exports.loginUser = async (req, res) => {
     try {
-        // ... (validation)
+        const { Username, Password } = req.body;
+
+        if (!Username || !Password) {
+            return res.status(400).json({ message: 'Username and Password are required.' });
+        }
 
         const pool = await poolPromise;
         const result = await pool.request()
             .input('Username', sql.NVarChar(50), Username)
-            .execute('AuthenticateUser'); // Calls the SP
+            .execute('AuthenticateUser');
 
-        if (!result.recordset || result.recordset.length === 0 || !result.recordset[0].IsActive) {
+        const user = result.recordset[0];
+        if (!user || !user.IsActive) {
             return res.status(401).json({ message: 'Invalid credentials or user is inactive.' });
         }
 
-        const user = result.recordset[0];
-        // --- NEW DEBUG LOG ---
-        console.log('Backend: User object retrieved from DB:', user);
-        // --- END NEW DEBUG LOG ---
+        console.log('Backend: Raw user object from DB query:', user);
 
-        const storedPasswordHash = user.PasswordHash;
-
-        const isMatch = await bcrypt.compare(Password, storedPasswordHash);
-
+        const isMatch = await bcrypt.compare(Password, user.PasswordHash);
         if (!isMatch) {
             return res.status(401).json({ message: 'Invalid credentials.' });
         }
@@ -45,20 +44,15 @@ exports.loginUser = async (req, res) => {
             userId: user.UserID,
             username: user.Username,
             roleId: user.RoleID,
-            roleName: user.RoleName // This is expected to be here
+            roleName: user.RoleName
         };
 
         const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' });
 
         res.status(200).json({
             message: 'Login successful!',
-            token: token,
-            user: { // This is the object sent to the frontend
-                userId: user.UserID,
-                username: user.Username,
-                roleId: user.RoleID,
-                roleName: user.RoleName // This is what is sent
-            }
+            token,
+            user: payload
         });
 
     } catch (err) {
@@ -66,6 +60,7 @@ exports.loginUser = async (req, res) => {
         res.status(500).send({ message: 'Internal Server Error', error: err.message });
     }
 };
+
 
 
 // Controller for user registration
@@ -113,70 +108,6 @@ exports.registerUser = async (req, res) => {
         // Log the detailed error on the server side
         console.error('Error during user registration:', err.message);
         // Send a generic internal server error response to the client
-        res.status(500).send({ message: 'Internal Server Error', error: err.message });
-    }
-};
-
-// Controller for user login
-exports.loginUser = async (req, res) => {
-    try {
-        const { Username, Password } = req.body;
-
-        // Basic validation for required fields
-        if (!Username || !Password) {
-            return res.status(400).json({ message: 'Username and Password are required.' });
-        }
-
-        const pool = await poolPromise; // Get a connection from the pool
-        const result = await pool.request()
-            .input('Username', sql.NVarChar(50), Username) // Input Username parameter
-            .execute('AuthenticateUser'); // Execute AuthenticateUser SP (now only takes Username)
-
-        // Check if user was found and is active
-        if (!result.recordset || result.recordset.length === 0 || !result.recordset[0].IsActive) {
-            // If no user found or user is inactive, send 401 Unauthorized
-            return res.status(401).json({ message: 'Invalid credentials or user is inactive.' });
-        }
-
-        const user = result.recordset[0]; // Get the user data from the first (and only) row
-        const storedPasswordHash = user.PasswordHash; // Get the hashed password from the database
-
-        // Compare the provided plain-text password with the stored hashed password
-        const isMatch = await bcrypt.compare(Password, storedPasswordHash);
-
-        if (!isMatch) {
-            // If passwords do not match, send 401 Unauthorized
-            return res.status(401).json({ message: 'Invalid credentials.' });
-        }
-
-        // --- Generate JWT Token upon successful authentication ---
-        // The payload contains the data you want to store in the token.
-        // DO NOT store sensitive data like raw passwords in the token.
-        const payload = {
-            userId: user.UserID,
-            username: user.Username,
-            roleId: user.RoleID,
-            roleName: user.RoleName // Include roleName for frontend convenience
-        };
-
-        // Sign the token with your secret key and set an expiration time
-        // The token is a string that represents the authenticated session.
-        const token = jwt.sign(payload, jwtSecret, { expiresIn: '1h' }); // Token expires in 1 hour
-
-        // Send a success response with the JWT token and basic user info
-        res.status(200).json({
-            message: 'Login successful!',
-            token: token, // The JWT token is sent to the frontend
-            user: { // Basic user info for immediate display in the UI
-                userId: user.UserID,
-                username: user.Username,
-                roleId: user.RoleID,
-                roleName: user.RoleName
-            }
-        });
-
-    } catch (err) {
-        console.error('Error during user login:', err.message);
         res.status(500).send({ message: 'Internal Server Error', error: err.message });
     }
 };

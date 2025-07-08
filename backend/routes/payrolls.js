@@ -1,7 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const payrollController = require('../controllers/payrollController'); 
-
+const payrollController = require('../controllers/payrollController');
+ 
+router.get('/grades', payrollController.getAllSalaryGrades);
 router.get('/payroll', payrollController.getPayrollOverview)
 router.get('/comparatio', payrollController.getSalaryCompaRatio)
 router.get('/distributionbygrade',payrollController.getSalaryDistributionByGrade)

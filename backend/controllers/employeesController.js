@@ -48,33 +48,103 @@ exports.getCurrentEmployeeDetails = async (req, res) => {
   }
 };
 
-// Controller to add a new employee using your AddEmployee stored procedure
 exports.addEmployee = async (req, res) => {
   try {
-    // Parameters for AddEmployee SP: @Name, @DOB, @DeptID, @RoleID, @JoinDate
-    const { Name, DOB, DeptID, RoleID, JoinDate } = req.body;
+    // NEW: Add initial salary and grade parameters to the request body
+    const { Name, DOB, DeptID, RoleID, JoinDate, BasicSalary, HousingAllowance, TransportAllowance, OtherAllowances, GradeID } = req.body;
 
-    // Basic validation
-    if (!Name || !DOB || !DeptID || !RoleID || !JoinDate) {
-      return res.status(400).json({ message: 'All fields (Name, DOB, DeptID, RoleID, JoinDate) are required.' });
+    // Basic validation (adjust as needed for new salary fields)
+    if (!Name || !DOB || !DeptID || !RoleID || !JoinDate || BasicSalary === undefined || HousingAllowance === undefined || TransportAllowance === undefined || OtherAllowances === undefined || GradeID === undefined) {
+      return res.status(400).json({ message: 'All employee fields, including initial salary and grade, are required.' });
     }
 
     const pool = await poolPromise;
-    await pool.request()
+    const result = await pool.request()
       .input('Name', sql.NVarChar(50), Name)
       .input('DOB', sql.Date, DOB)
       .input('DeptID', sql.Int, DeptID)
       .input('RoleID', sql.Int, RoleID)
       .input('JoinDate', sql.Date, JoinDate)
+      // NEW: Input for initial salary and grade
+      .input('BasicSalary', sql.Money, BasicSalary)
+      .input('HousingAllowance', sql.Money, HousingAllowance)
+      .input('TransportAllowance', sql.Money, TransportAllowance)
+      .input('OtherAllowances', sql.Money, OtherAllowances)
+      .input('GradeID', sql.Int, GradeID) // Pass GradeID to the SP
       .execute('AddEmployee'); // Execute your AddEmployee stored procedure
 
-    res.status(201).json({ message: 'Employee added successfully!' });
+    // Assuming AddEmployee SP now returns the new EmployeeID via SELECT @EmployeeID AS EmployeeID;
+    let newEmployeeId = null;
+    if (result.recordset && result.recordset.length > 0) {
+        newEmployeeId = Object.values(result.recordset[0])[0];
+    }
+
+    res.status(201).json({ message: 'Employee added successfully!', employeeId: newEmployeeId });
   } catch (err) {
     console.error('Error adding employee:', err.message);
     res.status(500).send({ message: 'Error adding employee', error: err.message });
   }
 };
 
+exports.updateEmployeeDetails = async (req, res) => {
+    try {
+        // Parameters: @EmployeeID, @Name, @DOB, @DeptID, @RoleID, @JoinDate, @IsActive
+        const { id } = req.params; // EmployeeID from URL
+        const { Name, DOB, DeptID, RoleID, JoinDate, IsActive } = req.body;
+
+        if (!id || !Name || !DOB || !DeptID || !RoleID || !JoinDate || IsActive === undefined) {
+            return res.status(400).json({ message: 'All core employee fields are required for update.' });
+        }
+
+        const pool = await poolPromise;
+        await pool.request()
+            .input('EmployeeID', sql.Int, id)
+            .input('Name', sql.NVarChar(50), Name)
+            .input('DOB', sql.Date, DOB)
+            .input('DeptID', sql.Int, DeptID)
+            .input('RoleID', sql.Int, RoleID)
+            .input('JoinDate', sql.Date, JoinDate)
+            .input('IsActive', sql.Bit, IsActive)
+            .execute('UpdateEmployeeDetails'); // Call the new SP
+
+        res.status(200).json({ message: 'Employee core details updated successfully!' });
+    } catch (err) {
+        console.error('Error updating employee core details:', err.message);
+        res.status(500).send({ message: 'Error updating employee core details', error: err.message });
+    }
+};
+
+exports.getEmployeeById = async (req, res) => {
+    try {
+        const { id } = req.params; // EmployeeID from URL
+
+        if (!id) {
+            return res.status(400).json({ message: 'EmployeeID is required.' });
+        }
+
+        // NEW: Explicitly parse id to an integer
+        const employeeIdInt = parseInt(id, 10); // Parse the string ID to an integer
+
+        // Basic validation for parsed ID
+        if (isNaN(employeeIdInt)) {
+            return res.status(400).json({ message: 'Invalid EmployeeID format.' });
+        }
+
+        const pool = await poolPromise;
+        const result = await pool.request()
+            .input('EmployeeID', sql.Int, employeeIdInt) // Use the parsed integer
+            .query('SELECT * FROM vw_EmployeeMaster WHERE EmployeeID = @EmployeeID');
+
+        if (!result.recordset || result.recordset.length === 0) {
+            return res.status(404).json({ message: 'Employee not found.' });
+        }
+
+        res.json(result.recordset);
+    } catch (err) {
+        console.error('Error fetching employee by ID:', err.message);
+        res.status(500).send({ message: 'Internal Server Error', error: err.message });
+    }
+};
 // Controller to offboard an employee using your ExecuteOffboarding master stored procedure
 exports.removeEmployee = async (req, res) => {
     try {

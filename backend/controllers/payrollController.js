@@ -22,6 +22,18 @@ exports.getSalaryCompaRatio = async (req, res) => {
   }
 };
 
+exports.getAllSalaryGrades = async (req, res) => {
+  try {
+    const pool = await poolPromise;
+    const result = await pool.request().query('SELECT GradeID, GradeName, MinSalary, MidSalary, MaxSalary FROM SalaryGrades');
+    res.json(result.recordset);
+  } catch (err) {
+    console.error('Error fetching all salary grades:', err.message);
+    res.status(500).send({ message: 'Internal Server Error', error: err.message });
+  }
+};
+
+
 exports.getSalaryDistributionByGrade = async (req, res) => {
   try {
     const pool = await poolPromise;
