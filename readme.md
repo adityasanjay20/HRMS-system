@@ -20,53 +20,94 @@ The repository is organized into the following main directories:
 * **Express.js**: Web application framework for Node.js.  
 * **mssql**: Node.js driver for Microsoft SQL Server.  
 * **dotenv**: Module to load environment variables from a .env file.  
-* **cors**: Node.js middleware for enabling Cross-Origin Resource Sharing.
+* **cors**: Node.js middleware for enabling Cross-Origin Resource Sharing.  
+* **bcryptjs**: Library for password hashing.  
+* **jsonwebtoken**: Library for JSON Web Token (JWT) generation and verification.
 
 ### **Database**
 
 * **Microsoft SQL Server**: Relational database management system.
 
-### **Frontend (Future)**
+### **Frontend**
 
-* **React**: JavaScript library for building user interfaces.
+* **React**: JavaScript library for building user interfaces.  
+* **Vite**: Fast development build tool for React.  
+* **Axios**: Promise-based HTTP client for API calls.  
+* **Tailwind CSS**: Utility-first CSS framework for styling.
 
 ## **Backend API Features**
 
 The Node.js Express.js API provides the following core functionalities, interacting directly with a well-structured SQL Server database:
 
+* **User Authentication & Authorization**:  
+  * User registration (hashing passwords).  
+  * User login (JWT generation).  
+  * User profile retrieval.  
 * **Employee Management**:  
-  * Retrieve all current employee details.  
-  * Add new employees.  
+  * Retrieve all current employee details (master list).  
+  * Add new employees (including initial role, department, and salary history).  
+  * Update core employee details (name, DOB, join date, active status).  
+  * Update employee roles and salaries (separate endpoints).  
   * Initiate comprehensive employee offboarding (deactivation, asset returns, gratuity calculation).  
-  * Update employee roles and salaries.  
 * **Leave & Attendance Management**:  
   * View leave request statuses, summaries, and balances.  
-  * Log daily attendance and time spent on projects.  
+  * Log daily attendance (check-in/check-out) and time spent on projects.  
   * Apply for leave and accrue annual leave.  
 * **Payroll & Compensation**:  
-  * View salary compensation ratios and distribution.  
+  * View salary compensation ratios and distribution by grade.  
+  * View historical payroll overview.  
   * Insert, update, and delete payroll records.  
+  * Retrieve all salary grades (for dropdowns).  
 * **Performance Management**:  
   * Insert and update employee performance appraisals.  
   * View appraisal history.  
 * **HR Administration**:  
-  * Manage asset inventory and assignments.  
-  * Track department employee counts and role history.  
-  * Manage project details and teams.  
-  * Track candidate status and employee onboarding progress.  
-* **Reporting**: Access to various data views for reporting purposes (e.g., employee master data, salaries, leave statuses).  
+  * View asset inventory and assigned assets.  
+  * View department employee counts and role occupancy history.  
+  * View project overviews and project teams.  
+  * View candidate status summary and employee onboarding progress/journey.  
+  * Add new assets, assign assets to employees, and return assets.  
+  * Initiate onboarding process and complete individual onboarding steps.  
+  * Create new projects.  
+* **Reporting**: Access to various data views for comprehensive reporting.  
 * **Business Logic**: Executes stored procedures for consistent and validated data operations.  
 * **Auditing**: Triggers in the database ensure an audit trail for important changes.
+
+## **Frontend Application Features**
+
+The React frontend provides a single-page application experience with the following features:
+
+* **User Authentication**:  
+  * Dedicated Login and Registration forms.  
+  * Persistent user sessions using JWTs stored in localStorage.  
+  * Logout functionality.  
+* **Global Navigation**:  
+  * A responsive top navigation bar to switch between main HRMS sections (Dashboard, Employees, Leave, Payroll, Appraisals, HR Admin).  
+  * Role-based visibility for navigation links (e.g., HR Admin link for Admins/HR Managers only).  
+* **Dashboard**:  
+  * A welcoming landing page after login with quick links to major sections.  
+* **Employee Management Section**:  
+  * **Employee Master List**: Displays a table of all active and inactive employees with key details.  
+  * **Add Employee Form**: Allows authorized users to add new employees with dynamic dropdowns for Departments, Roles, and Salary Grades.  
+  * **Edit Employee Form**: Allows authorized users to edit existing employee details (name, DOB, department, role, join date, active status) and update salary components.  
+  * **Terminate Employee**: Button in employee list to initiate offboarding via a confirmation modal with a termination date.  
+* **Payroll & Compensation Section**:  
+  * Displays Payroll Overview and Salary Compa-Ratio data in tables.  
+* **Performance Appraisals Section**:  
+  * Displays Employee Appraisal History in a table.  
+* **General UI/UX**:  
+  * Consistent styling with Tailwind CSS.  
+  * Loading indicators, success messages, and error messages for API interactions.
 
 ## **Prerequisites**
 
 Before running this project, ensure you have the following installed on your machine:
 
-* **Node.js & npm**: Download from [https://nodejs.org/](https://nodejs.org/).  
-* **Microsoft SQL Server**: (e.g., SQL Server Express Edition).  
+* **Node.js & npm:** Download from [nodejs.org](https://nodejs.org/).  
+* **Microsoft SQL Server:** (e.g., SQL Server Express Edition).  
 * **SQL Server Management Studio (SSMS) or Azure Data Studio (ADS)**: Recommended for managing your SQL Server instance and executing SQL scripts.  
-* **Git**: Download from [https://git-scm.com/](https://git-scm.com/).  
-* **Insomnia/Postman**: (Recommended) For testing API endpoints.
+* **Git:** Download from [git-scm.com](https://git-scm.com/).  
+* **Insomnia/Postman:** (Recommended) For testing API endpoints.
 
 ## **Setup Instructions**
 
@@ -82,6 +123,8 @@ cd HRMS-system
 
 ### **2\. Database Setup**
 
+You need to set up the SQL Server database using the provided scripts.
+
 #### **Create a New Database:**
 
 * Open SSMS or Azure Data Studio.  
@@ -94,6 +137,12 @@ cd HRMS-system
 * In SSMS/ADS, open the sql/HRMS\_db\_schema.sql file from your cloned repository.  
 * Ensure the script is set to execute against the HRMS\_db database (select HRMS\_db from the dropdown menu in the query editor).  
 * Execute the script. This will create all your tables, views, stored procedures, and triggers.
+
+#### **Execute Seed Data Script (Optional):**
+
+* If you have a sql/HRMS\_db\_seed\_data.sql file (for small lookup tables like Departments, Roles, etc.), open it.  
+* Ensure it’s executing against HRMS\_db.  
+* Execute the script to populate initial data.
 
 #### **Create SQL Server Login for the Application:**
 
@@ -128,9 +177,10 @@ PORT=5000
 DB\_SERVER=DESKTOP-LPSI2AM \# Or 'localhost', or '127.0.0.1'  
 DB\_DATABASE=HRMS\_db  
 DB\_USER=hrmsUser  
-DB\_PASSWORD=MyStrongP@ssw0rd\!
+DB\_PASSWORD=MyStrongP@ssw0rd\!  
+JWT\_SECRET=YOUR\_SUPER\_STRONG\_RANDOM\_SECRET\_KEY\_HERE\_LIKE\_A\_UUID\_OR\_LONGER
 
-**Important**: Replace DESKTOP-LPSI2AM and MyStrongP@ssw0rd\! with your actual server name and user password.
+**Important**: Replace DESKTOP-LPSI2AM, hrmsUser, MyStrongP@ssw0rd\!, and YOUR\_SUPER\_STRONG\_RANDOM\_SECRET\_KEY\_HERE\_LIKE\_A\_UUID\_OR\_LONGER with your actual server name, user credentials, and a strong, random JWT secret.
 
 #### **Start the Backend Server:**
 
@@ -138,85 +188,75 @@ node server.js
 
 You should see console messages indicating the database connection is established and the server is running on port 5000\.
 
-### **4\. Frontend Setup (Future)**
+### **4\. Frontend Setup**
 
-* Navigate to the frontend/ directory.  
-* Run npm install.  
-* Run npm start (once frontend is developed).
+#### **Navigate to the Frontend Directory:**
 
-## **API Endpoints**
+cd frontend
 
-The backend API is organized by logical groups. All endpoints are prefixed with http://localhost:5000/api/.
+#### **Install Dependencies:**
 
-### **Employee Endpoints (/api/employees)**
+npm install
 
-| Method | Path | Description | Request Body (JSON) Example for POST/PUT |
-| :---- | :---- | :---- | :---- |
-| GET | /master | Get all current employee details from vw\_EmployeeMaster. | N/A |
-| POST | / | Add a new employee using AddEmployee stored procedure. | json { "Name": "Jane Doe", "DOB": "1990-01-01", "DeptID": 1, "RoleID": 10, "JoinDate": "2024-01-01" } |
-| PUT | /:id/terminate | Offboard an employee using ExecuteOffboarding stored procedure. id is EmployeeID. | json { "TerminationDate": "2025-07-03" } |
-| PUT | /role | Change an employee's role using ChangeEmployeeRole stored procedure. | json { "EmployeeID": 1, "NewRoleID": 2, "EffectiveDate": "2025-01-01" } |
-| PUT | /salary | Update an employee's salary using UpdateSalary stored procedure. | json { "EmployeeID": 1, "EffectiveDate": "2025-01-01", "BasicSalary": 6000.00, "HousingAllowance": 1200.00, "TransportAllowance": 600.00, "OtherAllowances": 250.00, "NewGradeID": 3, "Reason": "Annual Review" } |
+#### **Configure Tailwind CSS:**
 
-### **Leave & Attendance Endpoints (/api/leave)**
+1. **Initialize Tailwind CSS:**  
+   npx tailwindcss init \-p
 
-| Method | Path | Description | Request Body (JSON) Example for POST/PUT |
-| :---- | :---- | :---- | :---- |
-| GET | /status | Get all leave request statuses from vw\_LeaveReqStatus. | N/A |
-| GET | /summary | Get leave summary by employee from vw\_LeaveSummaryByEmployee. | N/A |
-| GET | /onleave | Get employees currently on leave from vw\_EmployeesCurrentlyOnLeave. | N/A |
-| GET | /bal | Get employee leave balances from vw\_EmployeeLeaveBalances. | N/A |
-| GET | /curleave | Get current leaves from vw\_EmployeesCurrentlyOnLeave. | N/A |
-| GET | /att | Get employee attendance from vw\_EmployeeAttendance. | N/A |
-| GET | /tim | Get employee timesheets from vw\_EmployeeTimesheets. | N/A |
-| POST | /apply | Apply for leave using ApplyLeave stored procedure. | json { "EmployeeID": 1, "LeaveTypeID": 1, "StartDate": "2025-08-01", "EndDate": "2025-08-05" } |
-| POST | /accrueannual | Accrue annual leave for all active employees using AccrueAnnualLeave stored procedure. | N/A |
-| POST | /attendance | Log employee check-in/check-out using LogAttendance stored procedure. | json { "EmployeeID": 1, "ActionType": "CheckIn" } |
-| POST | /logtime | Log time worked on a project using LogTimeToProject stored procedure. | json { "EmployeeID": 1, "ProjectID": 101, "EntryDate": "2025-07-03", "HoursWorked": 8.5, "Description": "Worked on HRMS backend development" } |
+   (If this command fails, manually create tailwind.config.js and postcss.config.js in frontend/ directory).  
+2. Configure tailwind.config.js:  
+   Open frontend/tailwind.config.js and update the content array:  
+   // tailwind.config.js  
+   /\*\* @type {import('tailwindcss').Config} \*/  
+   export default {  
+     content: \[  
+       "./index.html",  
+       "./src/\*\*/\*.{js,ts,jsx,tsx}",  
+     \],  
+     theme: {  
+       extend: {},  
+     },  
+     plugins: \[\],  
+   }
 
-### **Payroll & Compensation Endpoints (/api/payroll)**
+3. Configure postcss.config.js:  
+   Open frontend/postcss.config.js and ensure it uses @tailwindcss/postcss:  
+   // postcss.config.js  
+   export default {  
+     plugins: {  
+       '@tailwindcss/postcss': {},  
+       autoprefixer: {},  
+     },  
+   }
 
-| Method | Path | Description | Request Body (JSON) Example for POST/PUT |
-| :---- | :---- | :---- | :---- |
-| GET | /comparatio | Get salary Compa-Ratio data from vw\_SalaryCompaRatio. | N/A |
-| GET | /distributionbygrade | Get salary distribution by grade from vw\_SalaryDistributionByGrade. | N/A |
-| POST | / | Insert a new payroll record using InsertPayroll stored procedure. | json { "EmployeeID": 1, "PayPeriodStart": "2025-06-01", "PayPeriodEnd": "2025-06-30", "BasicSalary": 5000.00, "HousingAllowance": 1000.00, "TransportAllowance": 500.00, "OtherAllowances": 200.00, "Deductions": 300.00 } |
-| PUT | /:id | Update an existing payroll record using UpdatePayroll stored procedure. id is PayrollID. | json { "PayrollID": 1, "BasicSalary": 5200.00, "Allowances": 1750.00, "Deductions": 320.00 } |
-| DELETE | /:id | Delete a payroll record using DeletePayroll stored procedure. id is PayrollID. | N/A |
+4. Add Tailwind directives to src/index.css:  
+   Open frontend/src/index.css and add these lines at the very top:  
+   /\* frontend/src/index.css \*/  
+   @tailwind base;  
+   @tailwind components;  
+   @tailwind utilities;
 
-### **Performance Appraisals Endpoints (/api/appraisals)**
+   body {  
+     font-family: 'Inter', sans-serif;  
+   }
 
-| Method | Path | Description | Request Body (JSON) Example for POST/PUT |
-| :---- | :---- | :---- | :---- |
-| POST | / | Insert a new performance appraisal using InsertAppraisal stored procedure. | json { "EmployeeID": 1, "ReviewerID": 2, "ReviewCycle": "Q2 2025", "ReviewDate": "2025-06-30", "Score": 4.50, "Feedback": "Excellent performance.", "PromotionRecommended": true } |
-| PUT | / | Update an existing performance appraisal using UpdateAppraisal stored procedure. | json { "AppraisalID": 123, "Score": 4.80, "Feedback": "Outstanding quarter.", "PromotionRecommended": true } |
-| GET | /history | Get all employee appraisals history from vw\_EmployeeAppraisals. | N/A |
+5. Modify frontend/index.html:  
+   Add class="w-full" to the div\#root tag:  
+   \<div id="root" class="w-full"\>\</div\>
 
-### **HR Administration Endpoints (/api/hradmin)**
+#### **Start the Frontend Development Server:**
 
-| Method | Path | Description | Request Body (JSON) Example for POST/PUT |
-| :---- | :---- | :---- | :---- |
-| GET | /assets/inventory | Get asset inventory from vw\_AssetInventory. | N/A |
-| GET | /assets/assigned | Get assigned assets from vw\_AssignedAssets. | N/A |
-| GET | /department/count | Get department employee count from vw\_DepartmentEmployeeCount. | N/A |
-| GET | /roles/history | Get role occupancy history from vw\_RoleOccupancyHistory. | N/A |
-| GET | /projects/overview | Get project overview from vw\_ProjectOverview. | N/A |
-| GET | /projects/teams | Get project teams from vw\_ProjectTeams. | N/A |
-| GET | /candidates/summary | Get candidate status summary from vw\_CandidateStatusSummary. | N/A |
-| GET | /onboarding/status | Get employee onboarding status from vw\_EmployeeOnboardingStatus. | N/A |
-| GET | /journey | Get employee journey from vw\_EmployeeJourney. | N/A |
-| POST | /assets/add | Add a new asset using AddAsset stored procedure. | json { "CategoryName": "Laptop", "AssetName": "Dell XPS 15", "SerialNumber": "SN123456", "PurchaseDate": "2024-01-01" } |
-| POST | /assets/assign | Assign an asset to an employee using AssignAssetToEmployee stored procedure. | json { "AssetID": 1, "EmployeeID": 1, "AssignedDate": "2025-07-01" } |
-| PUT | /assets/return | Return an asset using ReturnAsset stored procedure. | json { "AssetID": 1, "ReturnDate": "2025-07-05" } |
-| POST | /onboarding/initiate | Initiate onboarding process using InitiateOnboardingProcess stored procedure. | json { "EmployeeID": 1 } |
-| PUT | /onboarding/complete-step | Complete an onboarding step using CompleteOnboardingStep stored procedure. | json { "EmployeeID": 1, "StepName": "Sign Employment Contract", "Notes": "Contract signed and filed." } |
-| POST | /projects/create | Create a new project using CreateProject stored procedure. | json { "ProjectName": "HRMS Phase 2", "ClientID": 10, "StartDate": "2025-09-01" } |
+npm run dev
+
+Open your browser to http://localhost:5173/.
 
 ## **Future Enhancements**
 
-* Implement CRUD operations for other HR entities (Leave Requests, Departments, Roles, Appraisals).  
-* Add user authentication and authorization.  
-* Develop the React frontend to consume these APIs.  
-* Implement robust input validation on the backend.  
-* Add logging and monitoring capabilities.  
+* Implement remaining CRUD operations for Payroll, Appraisals, and HR Admin entities.  
+* Implement server-side JWT verification middleware for all protected API routes.  
+* Add comprehensive client-side form validation and user feedback (e.g., toast notifications).  
+* Improve table features: sorting, filtering, pagination.  
+* Implement more advanced role-based access control on the backend.  
+* Enhance UI/UX with better styling, animations, and responsiveness.  
+* Develop dedicated dashboards for each major HR module.  
 * Containerize the application using Docker.
